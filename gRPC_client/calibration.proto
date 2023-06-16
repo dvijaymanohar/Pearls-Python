@@ -1,0 +1,102 @@
+
+syntax = "proto3";
+
+package calibration_interface;
+
+/* Was an RPC call successful, and if not, why not? */
+message ResponseStatus {
+  /* Was the RPC call successful? */
+  bool success = 1;
+
+  /* HTTP status code (for easy mapping to REST APIs). */
+  uint32 code = 2;
+
+  /* A developer-facing error message, describing the status. */
+  string reason = 3;
+}
+
+/* End node identification */
+enum Link {
+  ALICE = 0;
+  BOB = 1;
+  BOTH = 2;
+}
+
+message BoostIntensityCalibrationRequest {}
+
+message BoostIntensityCalibrationReply {
+  /* Was the request sucessful and if not why not? In case of error, this is the
+   * only field. */
+  ResponseStatus status = 1;
+}
+
+message CalibrateModulatorsRequest {}
+
+message CalibrateModulatorsReply {
+  /* Was the request sucessful and if not why not? In case of error, this is the
+   * only field. */
+  ResponseStatus status = 1;
+}
+
+message CalibrateMpnRequest {
+  float coeffs0 = 1;
+  float coeffs1 = 2;
+  float attn2_default = 3;
+  float multiplication_factor = 4;
+}
+
+message CalibrateMpnReply {
+  /* Was the request sucessful and if not why not? In case of error, this is the
+   * only field. */
+  ResponseStatus status = 1;
+}
+
+enum EndNodeCalibrationType {
+  MOD = 0;
+  MPN = 1;
+}
+
+message GetCalibrationIntervalsRequest { EndNodeCalibrationType calib_type = 1; }
+
+message GetCalibrationIntervalsReply {
+  /* Was the request sucessful and if not why not? In case of error, this is the
+   * only field. */
+  ResponseStatus status = 1;
+
+  float interval = 2;
+}
+
+message SetCalibrationIntervalsRequest {
+  EndNodeCalibrationType calib_type = 1;
+
+  float interval = 2;
+}
+
+message SetCalibrationIntervalsReply {
+  /* Was the request sucessful and if not why not? In case of error, this is the
+   * only field. */
+  ResponseStatus status = 1;
+}
+
+service Calibration {
+  /* Start the IM1, IM2 calibration */
+  rpc calibrate_modulators(CalibrateModulatorsRequest)
+      returns (CalibrateModulatorsReply);
+
+  /* Start the mean photon number calibration routine. */
+  rpc calibrate_mpn(CalibrateMpnRequest) returns (CalibrateMpnReply);
+
+  /* Boost intensity for calibration in case of high loss. This interface is
+   * called from End Node Qphase. */
+  rpc boost_intensity_calibration(BoostIntensityCalibrationRequest)
+      returns (BoostIntensityCalibrationReply);
+
+  /* Get the frequency of a calibration algorithm execution */
+  rpc get_calibration_intervals(GetCalibrationIntervalsRequest)
+      returns (GetCalibrationIntervalsReply);
+
+  /* Set the frequency of a calibration algorithm execution */
+  rpc set_calibration_intervals(SetCalibrationIntervalsRequest)
+      returns (SetCalibrationIntervalsReply);
+}
+
